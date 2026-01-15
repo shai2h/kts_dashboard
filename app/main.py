@@ -8,8 +8,13 @@ from app.modules.kts_dashboard.router import router as kts_router
 
 
 app = FastAPI(description='KTS Dashboard')
+from app.core.config import settings
 
+####### ВРЕМЕННЫЙ ПРИНТ #######
+print("DB_URL:", settings.DB_URL)
+####### ВРЕМЕННЫЙ ПРИНТ #######
 
+# Регистрируем роутер для KTS Dashboard
 app.include_router(kts_router, prefix="/api")
 
 
