@@ -1,14 +1,21 @@
-app/
-  main.py
-  core/
-    config.py        # настройки (Pydantic Settings, .env)
-    db.py            # async engine + session (SQLAlchemy, asyncpg)
-  modules/
-    kts_dashboard/
-      router.py      # HTTP ручки
-      schemas.py     # Pydantic-модели
-      models.py      # SQLAlchemy ORM модели
-      repository.py  # работа с БД
-      service.py     # бизнес-логика
-  migrations/        # Alembic
-.env
+## Технологии
+
+- **FastAPI**
+- **PostgreSQL**
+- **SQLAlchemy (async)**
+- **asyncpg**
+- **Pydantic Settings**
+- **Alembic**
+- **Plotly**
+
+## Запуск проекта
+
+```bash
+# 1. Скопируй .env
+cp env_example .env
+
+# 2. Установи зависимости
+pip install -r requirements.txt
+
+# 3. Запусти приложение
+uvicorn app.main:app --reload 'OR' python main.py
