@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>KTS Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section-title { font-size: 24px; margin-top: 20px; }
+        .columns { display: flex; gap: 40px; }
+        .column { flex: 1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 4px 6px; border-bottom: 1px solid #ddd; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<h1>DASHBOARD ПРОДАЖИ</h1>
+
+<div class="section-title">План по выручке общий</div>
+<div id="total-bar" style="width:600px; height:80px;"></div>
+
+<div class="section-title">План по направлениям</div>
+<div id="podr-bars" style="width:600px; height:200px;"></div>
+
+<div class="section-title">Менеджеры по направлениям</div>
+<div class="columns">
+    {% for podr, managers in managers_by_podr.items() %}
+    <div class="column">
+        <h3>{{ podr }}</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Менеджер</th>
+                <th>План</th>
+                <th>Факт</th>
+                <th>%</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for m in managers %}
+            <tr>
+                <td>{{ m.manager }}</td>
+                <td>{{ '%.0f'|format(m.plan) }}</td>
+                <td>{{ '%.0f'|format(m.tec) }}</td>
+                <td>{{ '%.1f'|format(m.percent) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // 1. Общий план
+    const totalPercent = {{ total_percent|round(1) }};
+    const totalPlan = {{ total_plan|round(0) }};
+    const totalTec = {{ total_tec|round(0) }};
+
+    const totalData = [{
+        type: 'bar',
+        x: [totalPercent],
+        y: ['План'],
+        orientation: 'h',
+        marker: {color: '#4DA3FF'}
+    }];
+
+    const totalLayout = {
+        xaxis: {range: [0, 100], ticksuffix: '%'},
+        margin: {l: 60, r: 20, t: 10, b: 30},
+        showlegend: false,
+        annotations: [{
+            x: totalPercent,
+            y: 'План',
+            text: totalPercent.toFixed(1) + '%',
+            showarrow: false,
+            xanchor: 'right',
+            xshift: -10
+        }]
+    };
+
+    Plotly.newPlot('total-bar', totalData, totalLayout, {displayModeBar: false});
+
+    // 2. По направлениям
+    const podrNames = {{ by_podr | map(attribute='podr') | list | tojson }};
+    const podrPercents = {{ by_podr | map(attribute='percent') | list | tojson }};
+
+    const podrData = [{
+        type: 'bar',
+        x: podrPercents,
+        y: podrNames,
+        orientation: 'h',
+        marker: {color: ['#00AA55', '#0077CC', '#CC33AA']}
+    }];
+
+    const podrLayout = {
+        xaxis: {range: [0, 100], ticksuffix: '%'},
+        margin: {l: 80, r: 20, t: 10, b: 30},
+        showlegend: false
+    };
+
+    Plotly.newPlot('podr-bars', podrData, podrLayout, {displayModeBar: false});
+</script>
+
+</body>
+</html>
