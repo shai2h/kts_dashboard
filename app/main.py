@@ -11,6 +11,11 @@ from app.core.config import settings
 from app.core.db import Base, engine
 from app.modules.kts_dashboard.router import router as kts_router
 
+from fastapi import FastAPI
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from fastapi import Request
+
 
 # Проверка подключения к БД
 print("DB_URL:", settings.DB_URL)
@@ -32,6 +37,18 @@ app = FastAPI(description='KTS Dashboard', lifespan=lifespan)
 
 
 # Подключаем роуты
+app.include_router(kts_router, prefix="/api")
+
+"""
+Реализация шаблона
+"""
+templates = Jinja2Templates(directory="templates")
+
+app = FastAPI(description='KTS Dashboard')
+
+# если потом будут css/js файлы
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.include_router(kts_router, prefix="/api")
 
 
