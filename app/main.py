@@ -46,7 +46,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 # если потом будут css/js файлы
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(kts_router, prefix="/api")
 
