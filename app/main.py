@@ -1,4 +1,3 @@
-# app/main.py
 import os
 import sys
 from contextlib import asynccontextmanager
@@ -11,10 +10,11 @@ from app.core.config import settings
 from app.core.db import Base, engine
 from app.modules.kts_dashboard.router import router as kts_router
 
-from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi import Request
+
+from fastapi.openapi.docs import get_swagger_ui_html
 
 
 # Проверка подключения к БД
@@ -44,13 +44,21 @@ app.include_router(kts_router, prefix="/api")
 """
 templates = Jinja2Templates(directory="templates")
 
-app = FastAPI(description='KTS Dashboard')
 
 # если потом будут css/js файлы
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(kts_router, prefix="/api")
 
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,  # type: ignore
+        title=app.title + " - Swagger UI",  # type: ignore
+        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,  # type: ignore
+        swagger_js_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",
+        swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
+    )
 
 
 if __name__ == '__main__':
