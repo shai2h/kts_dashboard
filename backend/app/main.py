@@ -12,28 +12,16 @@ from app.modules.kts_dashboard.router import router as kts_router
 
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi import Request
 
 from fastapi.openapi.docs import get_swagger_ui_html
 
 
 # Проверка подключения к БД
-print("DB_URL:", settings.DB_URL)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Запуск приложения...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("Таблицы созданы")
-    yield
-    await engine.dispose()
-    print("Приложение остановлено")
+print("DB_URL:", settings.ASYNC_DB_URL)
 
 
 # Создаём приложение после определения lifespan
-app = FastAPI(description='KTS Dashboard', lifespan=lifespan)
+app = FastAPI(description='KTS Dashboard')
 
 
 # Подключаем роуты
@@ -59,6 +47,12 @@ async def custom_swagger_ui_html():
         swagger_js_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",
         swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
     )
+
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
 
 
 if __name__ == '__main__':
