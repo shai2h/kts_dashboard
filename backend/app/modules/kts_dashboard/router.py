@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, select, func
 
-from modules.kts_dashboard.schemas import KtsDashboardItemIn
+from app.modules.kts_dashboard.schemas import KtsDashboardItemIn
 from app.core.db import get_session
 from .models import KtsManagerPlan
 
