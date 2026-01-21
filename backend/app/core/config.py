@@ -8,9 +8,19 @@ class Settings(BaseSettings):
     DB_NAME: str
 
     @property
-    def DB_URL(self):
-        return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
+    def ASYNC_DB_URL(self):
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
 
-    model_config = SettingsConfigDict(env_file=".env")
+    @property
+    def SYNC_DB_URL(self):
+        return (
+            f"postgresql://"
+            f"{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
