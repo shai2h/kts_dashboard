@@ -15,6 +15,8 @@ from fastapi.staticfiles import StaticFiles
 
 from fastapi.openapi.docs import get_swagger_ui_html
 
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # Проверка подключения к БД
 print("DB_URL:", settings.ASYNC_DB_URL)
@@ -48,6 +50,13 @@ async def custom_swagger_ui_html():
         swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
     )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Или ["*"] для всех (не для продакшена)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/api/health")
 def health():
