@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+# Рабочая директория — внутри dashboard
+WORKDIR /app/dashboard
+
+# Копируем package.json ИЗ ПОДПАПКИ dashboard (в контексте ./frontend)
+COPY dashboard/package*.json ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+# Экспортируем переменные
+ENV NODE_ENV=development
+
+# Запускаем в режиме разработки
+CMD ["npm", "run", "dev"]
