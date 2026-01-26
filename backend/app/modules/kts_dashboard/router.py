@@ -141,13 +141,11 @@ async def dashboard(
     # Рандомные цитатки на вывод к дашборду
     quote = random.choice(QUOTES)
 
-    context = {
-        "request": request,
-        "total_plan": float(total_plan or 0),
-        "total_tec": float(total_tec or 0),
-        "total_percent": total_percent,
-        "by_podr": by_podr,
-        "managers_by_podr": managers_by_podr,
-        "quote": quote, # цитатки
-    }
-    return templates.TemplateResponse("dashboard.html", context)
+    return {
+    "total_plan": float(total_plan or 0),
+    "total_tec": float(total_tec or 0),
+    "total_percent": total_percent,
+    "by_podr": by_podr,
+    "managers_by_podr": managers_by_podr,
+    "quote": quote,
+}
