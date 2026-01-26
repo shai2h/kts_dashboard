@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Страница аналитических дашбордов отдела КТС",
 };
 
+const currentDate = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date());
+
 export default function Ecommerce() {
   return (
     <div className="p-4 flex flex-col gap-6">
@@ -45,8 +51,8 @@ export default function Ecommerce() {
             </div>
 
             {/* ДАТА */}
-            <div className="mt-3 text-md text-blue-800 text-start">
-              23 января 2026
+            <div className="mt-3 text-md text-blue-800 text-start capitalize">
+              {currentDate}
             </div>
 
           </div>
