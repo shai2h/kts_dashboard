@@ -8,6 +8,10 @@ from .models import KtsManagerPlan
 
 from fastapi.templating import Jinja2Templates
 
+from sqlalchemy.dialects.postgresql import insert
+
+from sqlalchemy import delete, tuple_
+
 import random
 
 # Список цитат — можно расширять
@@ -55,10 +59,8 @@ async def upload_items(
     items: list[KtsDashboardItemIn],
     session: AsyncSession = Depends(get_session),
 ):
-    # считаем сумму для ответа
     total_plan = sum(i.plan for i in items)
 
-    # готовим список словарей для вставки
     values = [
         {
             "manager": i.manager,
@@ -70,11 +72,36 @@ async def upload_items(
         for i in items
     ]
 
-    stmt = insert(KtsManagerPlan).values(values)
-    await session.execute(stmt)
-    await session.commit()
+    incoming_keys = {(i.manager, i.podr) for i in items}
 
-    return {"count": len(items), "total_plan": str(total_plan)}
+    async with session.begin():
+        # 1. удалить отсутствующих
+        if incoming_keys:
+            await session.execute(
+                delete(KtsManagerPlan).where(
+                    tuple_(
+                        KtsManagerPlan.manager,
+                        KtsManagerPlan.podr,
+                    ).not_in(incoming_keys)
+                )
+            )
+
+        # 2. upsert пришедших
+        stmt = insert(KtsManagerPlan).values(values)
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_manager_podr",
+            set_={
+                "plan": stmt.excluded.plan,
+                "tec": stmt.excluded.tec,
+                "procent": stmt.excluded.procent,
+            },
+        )
+        await session.execute(stmt)
+
+    return {
+        "count": len(items),
+        "total_plan": float(total_plan),
+    }
 
 
 # Роутер для дашборда
