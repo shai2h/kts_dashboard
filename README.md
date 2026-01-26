@@ -24,7 +24,6 @@ docker compose version
 
 ## Запуск проекта
 
-```bash
 # 1. Скопируй .env и создай .env.local для фронта
 cp .env_example .env
 echo "NEXT_PUBLIC_API_URL=http://127.0.0.1:8000" > frontend/dashboard/.env.local
