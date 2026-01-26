@@ -1,8 +1,8 @@
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /app/dashboard
 
-COPY package*.json ./
+COPY dashboard/package*.json ./
 RUN npm install
 
 COPY . .
