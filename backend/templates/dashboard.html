@@ -138,5 +138,21 @@
 
 </script>
 
+<script>
+    // обновление страницы каждые 3–5 минут (рандом, чтобы не долбить сервер ровно в одно время)
+    const MINUTES_MIN = 3;
+    const MINUTES_MAX = 5;
+
+    const refreshIntervalMs =
+        (Math.floor(Math.random() * (MINUTES_MAX - MINUTES_MIN + 1)) + MINUTES_MIN)
+        * 60 * 1000;
+
+    console.log(`Dashboard auto-refresh in ${refreshIntervalMs / 60000} minutes`);
+
+    setTimeout(() => {
+        window.location.reload();
+    }, refreshIntervalMs);
+</script>
+
 </body>
 </html>
