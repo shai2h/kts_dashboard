@@ -10,6 +10,8 @@ import GorizontBar from "@/components/ecommerce/GorizontalBar";
 import { EcommerceMetricsFact } from "@/components/ecommerce/EcommerceMetricsPlan";
 import { EcommerceMetricsPlan } from "@/components/ecommerce/EcommerceMetricsFact";
 
+import CurrentDate from "@/components/CurrentDate";
+
 import Image from "next/image";
 
 export const metadata: Metadata = {
@@ -18,11 +20,6 @@ export const metadata: Metadata = {
   description: "Страница аналитических дашбордов отдела КТС",
 };
 
-const currentDate = new Intl.DateTimeFormat("ru-RU", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-}).format(new Date());
 
 export default function Ecommerce() {
   return (
@@ -52,7 +49,7 @@ export default function Ecommerce() {
 
             {/* ДАТА */}
             <div className="mt-3 text-md text-blue-800 text-start capitalize">
-              {currentDate}
+              <CurrentDate />
             </div>
 
           </div>
