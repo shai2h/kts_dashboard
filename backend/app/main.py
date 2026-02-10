@@ -8,7 +8,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import settings
 from app.core.db import Base, engine
+
+# Импортируем роутеры КТС
 from app.modules.kts_dashboard.router import router as kts_router
+from app.modules.olympics_sales_dashboard.router import router as olympics_router # дашборд по акциям рх
 
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -28,6 +31,7 @@ app = FastAPI(description='KTS Dashboard')
 
 # Подключаем роуты
 app.include_router(kts_router, prefix="/api")
+app.include_router(olympics_router, prefix="/api")
 
 """
 Реализация шаблона
