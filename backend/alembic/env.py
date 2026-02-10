@@ -15,6 +15,7 @@ from app.core.db import Base
 from app.core.config import settings
 
 from app.modules.kts_dashboard.models import KtsManagerPlan
+from app.modules.olympics_sales_dashboard import models as _olympics_models
 
 config = context.config
 
