@@ -1,6 +1,7 @@
 import { fetchOlympicsDashboard } from "@/api/olympicsDashboard";
 import OlympicsSportsCarousel from "@/components/olympic_components/ManagersIndividualCharts/OlympicsSportsCarousel";
 import OlympicsTeamsCarousel from "@/components/olympic_components/TeamsCharts/OlympicsTeamsCarousel";
+import AutoReload from "@/components/olympic_components/AutoReload";
 
 
 
@@ -18,6 +19,8 @@ export default async function OlympicsPage() {
         backgroundRepeat: "no-repeat",
       }}
     >
+      {/* автоперезагрузка каждые 5 минут */}
+      <AutoReload intervalMs={5 * 60 * 1000} />
 
       <div className="min-h-screen">
         <div className="p-6 space-y-6">
