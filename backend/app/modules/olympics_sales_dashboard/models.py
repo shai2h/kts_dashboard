@@ -34,6 +34,9 @@ class OlympicsRow(Base):
     dept: Mapped[str] = Column(String, nullable=False)
     team: Mapped[str] = Column(String, nullable=False)
 
+    # РОПЫ
+    rop: Mapped[str] = Column(String, nullable=False)
+
     # ===== Спортивные метрики =====
 
     # Фигурное катание — количество клиентов
