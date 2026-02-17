@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
+
 class OlympicsRowIn(BaseModel):
     model_config = ConfigDict(extra="ignore")  # хоккей можно игнорить
 
@@ -29,6 +30,36 @@ class OlympicsRowIn(BaseModel):
 
 class OlympicsIngestRequest(BaseModel):
     rows: List[OlympicsRowIn]
+
+
+# Новая схема по командам:
+class OlympicsTeamRowIn(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    team: str = Field(...)
+
+    figure_skating: Optional[int] = None
+    curling: Optional[int] = None
+    snowboard: Optional[float] = None
+    hockey: Optional[float] = None
+
+    biathlon: Optional[int] = None
+    freestyle: Optional[int] = None
+    short_track: Optional[int] = None
+    ski_alpenism: Optional[int] = None
+
+    speed_skating: Optional[float] = None
+    bobsleigh: Optional[float] = None
+    northern_combination: Optional[int] = None
+
+    total_accounts: Optional[int] = None
+    bills_paid: Optional[int] = None
+
+
+class OlympicsTeamsIngestRequest(BaseModel):
+    rows: List[OlympicsTeamRowIn]
+
+
 
 
 class OlympicsIngestResponse(BaseModel):
@@ -94,7 +125,7 @@ class OlympicsTeamOut(BaseModel):
     speed_skating: Optional[float] = None
     bobsleigh: Optional[float] = None
     northern_combination: Optional[int] = None
-
+    hockey: Optional[float] = None
     total_accounts: int = 0
     bills_paid: int = 0
     hockey_ratio: Optional[float] = None
@@ -102,5 +133,5 @@ class OlympicsTeamOut(BaseModel):
 
 class OlympicsDashboardResponse(BaseModel):
     rows: List[OlympicsRowOut]
-    by_dept: List[OlympicsDeptOut]
-    by_team: List[OlympicsTeamOut]
+    by_dept: List[OlympicsDeptOut] = []
+    by_team: List[OlympicsTeamOut] = []

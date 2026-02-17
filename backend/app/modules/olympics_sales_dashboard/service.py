@@ -2,15 +2,18 @@ from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select, func, case
+from .schemas import OlympicsTeamsIngestRequest
 
-from .models import OlympicsRow
+from .models import OlympicsRow, OlympicsTeamAgg
 from .schemas import OlympicsIngestRequest
 
 from .schemas import (
+    OlympicsIngestRequest,
+    OlympicsTeamsIngestRequest,
     OlympicsRowOut,
     OlympicsDeptOut,
     OlympicsDashboardResponse,
-    OlympicsTeamOut
+    OlympicsTeamOut,
 )
 
 # хелперы для данных, форматирование
@@ -114,8 +117,45 @@ async def ingest_olympics_data(
     }
 
 
+TEAM_FIELDS = [
+    "figure_skating", "curling", "snowboard", "hockey",
+    "biathlon", "freestyle", "short_track", "ski_alpenism",
+    "speed_skating", "bobsleigh", "northern_combination",
+    "total_accounts", "bills_paid",
+]
+
+async def ingest_olympics_teams(session: AsyncSession, payload: OlympicsTeamsIngestRequest) -> dict:
+    rows: list[dict] = []
+
+    for r in payload.rows:
+        d = r.model_dump()
+        team = (d.get("team") or "").strip()
+        if not team:
+            continue
+        d["team"] = team
+        rows.append(d)
+
+    if not rows:
+        return {"status": "ok", "upserted": 0}
+
+    stmt = insert(OlympicsTeamAgg).values(rows)
+    excluded = stmt.excluded
+
+    update_cols = {k: getattr(excluded, k) for k in TEAM_FIELDS}
+    update_cols["updated_at"] = func.now()
+
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[OlympicsTeamAgg.team],
+        set_=update_cols,
+    )
+
+    await session.execute(stmt)
+    await session.commit()
+
+    return {"status": "ok", "upserted": len(rows)}
+
 async def get_olympics_dashboard(session: AsyncSession) -> OlympicsDashboardResponse:
-    # 1) строки по микрогруппам
+    # 1) строки по микрогруппам (индивидуалки)
     rows_stmt = select(
         OlympicsRow.microgroup,
         OlympicsRow.dept,
@@ -165,110 +205,49 @@ async def get_olympics_dashboard(session: AsyncSession) -> OlympicsDashboardResp
             bobsleigh=float(r.bobsleigh_money) if r.bobsleigh_money is not None else None,
 
             northern_combination=r.northern_combination_count,
-
             hockey_ratio=float(r.hockey_ratio) if r.hockey_ratio is not None else None,
         )
         for r in rows_result
     ]
 
-    dept_stmt = select(
-        # 2) агрегация данных по отделам
-        OlympicsRow.dept,
+    # 2) by_team — ТОЛЬКО из таблицы агрегатов (olympics_team_agg)
+    team_res = await session.execute(select(OlympicsTeamAgg))
+    team_rows = team_res.scalars().all()
 
-        func.sum(OlympicsRow.figure_skating_count).label("figure_skating"),
-        func.sum(OlympicsRow.curling_count).label("curling"),
-        func.sum(OlympicsRow.snowboard_money).label("snowboard"),
-        func.sum(OlympicsRow.biathlon_count).label("biathlon"),
-        func.sum(OlympicsRow.freestyle_count).label("freestyle"),
-        func.sum(OlympicsRow.short_track_count).label("short_track"),
-        func.sum(OlympicsRow.ski_alpenism_count).label("ski_alpenism"),
-        func.sum(OlympicsRow.speed_skating_money).label("speed_skating"),
-        func.sum(OlympicsRow.bobsleigh_money).label("bobsleigh"),
-        func.sum(OlympicsRow.northern_combination_count).label("northern_combination"),
-        func.coalesce(func.sum(OlympicsRow.total_accounts), 0).label("total_accounts"),
-        func.coalesce(func.sum(OlympicsRow.bills_paid), 0).label("bills_paid"),
-        case(
-            (
-                func.sum(OlympicsRow.total_accounts) > 0,
-                func.sum(OlympicsRow.bills_paid) / func.sum(OlympicsRow.total_accounts),
-            ),
-            else_=None,
-        ).label("hockey_ratio"),
-            ).group_by(OlympicsRow.dept)
+    by_team: list[OlympicsTeamOut] = []
+    for t in team_rows:
+        total = int(t.total_accounts or 0)
+        paid = int(t.bills_paid or 0)
+        ratio = (paid / total) if total > 0 else None
 
-    dept_result = (await session.execute(dept_stmt)).all()
+        by_team.append(
+            OlympicsTeamOut(
+                team=t.team,
+                figure_skating=t.figure_skating,
+                curling=t.curling,
+                snowboard=float(t.snowboard) if t.snowboard is not None else None,
+                hockey=float(t.hockey) if t.hockey is not None else None,  # <-- важно
 
-    by_dept = [
-        # агрегация данных по команде
-        OlympicsDeptOut(
-            dept=d.dept,
-            figure_skating=d.figure_skating,
-            curling=d.curling,
-            snowboard=float(d.snowboard) if d.snowboard is not None else None,
-            biathlon=d.biathlon,
-            freestyle=d.freestyle,
-            short_track=d.short_track,
-            ski_alpenism=d.ski_alpenism,
-            speed_skating=float(d.speed_skating) if d.speed_skating is not None else None,
-            bobsleigh=float(d.bobsleigh) if d.bobsleigh is not None else None,
-            northern_combination=d.northern_combination,
-            total_accounts=int(d.total_accounts or 0),
-            bills_paid=int(d.bills_paid or 0),
-            hockey_ratio=float(d.hockey_ratio) if d.hockey_ratio is not None else None,
+                biathlon=t.biathlon,
+                freestyle=t.freestyle,
+                short_track=t.short_track,
+                ski_alpenism=t.ski_alpenism,
+
+                speed_skating=float(t.speed_skating) if t.speed_skating is not None else None,
+                bobsleigh=float(t.bobsleigh) if t.bobsleigh is not None else None,
+                northern_combination=t.northern_combination,
+
+                total_accounts=total,
+                bills_paid=paid,
+                hockey_ratio=float(ratio) if ratio is not None else None,
+            )
         )
-        for d in dept_result
-    ]
 
-    team_stmt = (
-        select(
-            OlympicsRow.team,
-            func.sum(OlympicsRow.figure_skating_count).label("figure_skating"),
-            func.sum(OlympicsRow.curling_count).label("curling"),
-            func.sum(OlympicsRow.snowboard_money).label("snowboard"),
-            func.sum(OlympicsRow.biathlon_count).label("biathlon"),
-            func.sum(OlympicsRow.freestyle_count).label("freestyle"),
-            func.sum(OlympicsRow.short_track_count).label("short_track"),
-            func.sum(OlympicsRow.ski_alpenism_count).label("ski_alpenism"),
-            func.sum(OlympicsRow.speed_skating_money).label("speed_skating"),
-            func.sum(OlympicsRow.bobsleigh_money).label("bobsleigh"),
-            func.sum(OlympicsRow.northern_combination_count).label("northern_combination"),
-            func.coalesce(func.sum(OlympicsRow.total_accounts), 0).label("total_accounts"),
-            func.coalesce(func.sum(OlympicsRow.bills_paid), 0).label("bills_paid"),
-            case(
-                (
-                    func.sum(OlympicsRow.total_accounts) > 0,
-                    func.sum(OlympicsRow.bills_paid) / func.sum(OlympicsRow.total_accounts),
-                ),
-                else_=None,
-            ).label("hockey_ratio"),
-        )
-        .group_by(OlympicsRow.team)
-    )
-
-    team_result = (await session.execute(team_stmt)).all()
-
-    by_team = [
-        OlympicsTeamOut(
-            team=t.team,
-            figure_skating=t.figure_skating,
-            curling=t.curling,
-            snowboard=float(t.snowboard) if t.snowboard is not None else None,
-            biathlon=t.biathlon,
-            freestyle=t.freestyle,
-            short_track=t.short_track,
-            ski_alpenism=t.ski_alpenism,
-            speed_skating=float(t.speed_skating) if t.speed_skating is not None else None,
-            bobsleigh=float(t.bobsleigh) if t.bobsleigh is not None else None,
-            northern_combination=t.northern_combination,
-            total_accounts=int(t.total_accounts or 0),
-            bills_paid=int(t.bills_paid or 0),
-            hockey_ratio=float(t.hockey_ratio) if t.hockey_ratio is not None else None,
-        )
-        for t in team_result
-    ]
+    # 3) by_dept временно отключаем (но поле отдаём, чтобы фронт не падал)
+    by_dept: list[OlympicsDeptOut] = []
 
     return OlympicsDashboardResponse(
         rows=rows,
         by_dept=by_dept,
-        by_team=by_team
+        by_team=by_team,
     )

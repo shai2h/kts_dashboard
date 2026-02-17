@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
-from .schemas import OlympicsIngestRequest, OlympicsRowIn
-from .service import ingest_olympics_data
+from .schemas import OlympicsIngestRequest, OlympicsRowIn, OlympicsTeamsIngestRequest, OlympicsTeamRowIn
+from .service import ingest_olympics_data, ingest_olympics_teams
 
 from .service import get_olympics_dashboard
 from .schemas import OlympicsDashboardResponse
@@ -24,6 +24,15 @@ async def ingest_olympics(
     if isinstance(payload, list):
         payload = OlympicsIngestRequest(rows=payload)
     return await ingest_olympics_data(session=session, payload=payload)
+
+@router.post("/ingest-teams")
+async def ingest_olympics_team_agg(
+    payload: Union[OlympicsTeamsIngestRequest, List[OlympicsTeamRowIn]],
+    session: AsyncSession = Depends(get_session),
+):
+    if isinstance(payload, list):
+        payload = OlympicsTeamsIngestRequest(rows=payload)
+    return await ingest_olympics_teams(session=session, payload=payload)
 
 
 # @router.get("/dashboard", response_model=OlympicsDashboardResponse)
