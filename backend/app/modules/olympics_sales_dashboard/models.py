@@ -6,10 +6,11 @@ from sqlalchemy import (
     DateTime,
     UniqueConstraint,
     Index,
+    Float,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, mapped_column
 import uuid
 
 from app.core.db import Base
@@ -100,5 +101,53 @@ class OlympicsRow(Base):
             f"<OlympicsRow "
             f"microgroup={self.microgroup!r} "
             f"dept={self.dept!r} "
+            f"team={self.team!r}>"
+        )
+
+
+class OlympicsTeamAgg(Base):
+    __tablename__ = "olympics_team_agg"
+
+    team: Mapped[str] = mapped_column(String, primary_key=True)
+
+    figure_skating: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    curling: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    snowboard: Mapped[float | None] = mapped_column(Float, nullable=True)
+    hockey: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    biathlon: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    freestyle: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    short_track: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ski_alpenism: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    speed_skating: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bobsleigh: Mapped[float | None] = mapped_column(Float, nullable=True)
+    northern_combination: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    total_accounts: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bills_paid: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    # Техническое поле
+    updated_at: Mapped[DateTime] = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        # Уникальность строки
+        UniqueConstraint(
+            "team",
+            name="uq_olympics_row_team",
+        ),
+
+        # Индексы под дашборды
+        Index("ix_olympics_team_agg_team", "team"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<OlympicsRow "
             f"team={self.team!r}>"
         )
