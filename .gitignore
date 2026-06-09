@@ -1,4 +1,5 @@
 # frontend depend
+/.npm-cache
 # dependencies
 /.idea
 /node_modules
