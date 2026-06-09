@@ -17,7 +17,7 @@ export default function ManagersByDepartment() {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      {Object.entries(data.managers_by_podr as Record<string, ManagerStat[]>)
+      {Object.entries(data.managers_by_podr)
         .map(([podr, managers]) => (
           <div
             key={podr}

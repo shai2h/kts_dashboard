@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -20,6 +21,7 @@ services:
     build:
       context: ./backend
     container_name: backend
+    restart: unless-stopped
     env_file:
       - backend/.env
     expose:
@@ -40,25 +42,21 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev # dev версия
+      dockerfile: Dockerfile
     container_name: frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend/dashboard:/app/dashboard
-      - /app/dashboard/node_modules
-      - /app/.next
+    restart: unless-stopped
+    expose:
+      - "3000"
     networks:
       - app_network
     environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-    command: npm run dev
 
   nginx:
     image: nginx:alpine
     container_name: nginx
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:

@@ -1,4 +1,5 @@
 import { Montserrat } from "next/font/google";
+import { ThemeProvider } from "@/context/ThemeContext";
 import "./globals.css";
 import "flatpickr/dist/flatpickr.css";
 
@@ -16,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${montserrat.className} bg-gray-50`}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

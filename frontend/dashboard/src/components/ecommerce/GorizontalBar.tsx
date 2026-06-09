@@ -3,25 +3,13 @@
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 import { useDashboard } from "@/hooks/useDashboard";
-import { ByPodrItem } from "@/types";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
     ssr: false,
 });
 
-// Тип для данных
-interface ChartData {
-    total_percent: number;
-    total_plan: number;
-    total_tec: number;
-    // данные по категориям:
-    categories?: string[];
-    values?: number[];
-    by_podr: ByPodrItem[];
-}
-
 export default function HorizontalBar() {
-    const { data, loading, error } = useDashboard<ChartData>();
+    const { data, loading, error } = useDashboard();
 
     if (loading) {
         return <div>Загрузка...</div>;
@@ -58,7 +46,6 @@ export default function HorizontalBar() {
                 barHeight: '100%',
                 distributed: true,
                 horizontal: true,
-                stacked: '100%',
                 dataLabels: {
                     position: 'bottom' as const,
                 },
@@ -95,7 +82,7 @@ export default function HorizontalBar() {
             max: 100,
             categories: categories,
             labels: {
-                formatter: function (val: number) {
+                formatter: function (val: string) {
                     return `${val}%`;
                 }
             }
